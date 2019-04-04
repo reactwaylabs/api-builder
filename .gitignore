@@ -1,0 +1,7 @@
+node_modules
+@types
+dist
+
+junit.xml
+coverage
+.env
