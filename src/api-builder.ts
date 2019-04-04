@@ -57,6 +57,7 @@ export class ApiBuilder {
         const forceRequestIndex = this.requestsQueue.findIndex(x => x.isForced === true);
         const canMakeRequest = this.canMakeRequest();
 
+        // FIXME: Refactor to be more readable (fail fast).
         // If there are forced requests waiting in the queue.
         if (forceRequestIndex !== -1) {
             // Perform them first no matter whether we're allowed to make requests.
