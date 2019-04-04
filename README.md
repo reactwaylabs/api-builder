@@ -1,3 +1,9 @@
+[![NPM version](https://img.shields.io/npm/v/@reactway/api-builder.svg?logo=npm)](https://www.npmjs.com/package/@reactway/api-builder)
+[![Build Status](https://img.shields.io/azure-devops/build/reactway/reactway/7/master.svg?logo=azuredevops)](https://dev.azure.com/reactway/ReactWay/_build?definitionId=7)
+[![Code coverage](https://img.shields.io/azure-devops/coverage/reactway/reactway/7/master.svg)](https://dev.azure.com/reactway/ReactWay/_build?definitionId=7)
+[![Dependencies](https://img.shields.io/david/reactway/api-builder.svg)](https://david-dm.org/reactway/api-builder)
+[![Dev dependencies](https://img.shields.io/david/dev/reactway/api-builder.svg)](https://david-dm.org/reactway/api-builder?type=dev)
+
 # @reactway/api-builder
 
 An easy api client builder for applications with identity.
