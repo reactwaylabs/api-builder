@@ -1,0 +1,67 @@
+{
+    "name": "@reactway/api-builder",
+    "version": "1.0.0-alpha",
+    "description": "An easy api client builder for applications with identity.",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc -p .",
+        "watch": "tsc -p . -w",
+        "pretest": "tsc -p . --noEmit && tslint -p .",
+        "test": "jest"
+    },
+    "keywords": [
+        "Api",
+        "ApiBuilder",
+        "ApiClient",
+        "OAuth"
+    ],
+    "author": "ReactWay <dev@reactway.com> (https://github.com/reactway)",
+    "contributors": [
+        "Martynas Žilinskas <martynas@quatrodev.com> (https://github.com/MartynasZilinskas)",
+        "Dovydas Navickas <dovydas@quatrodev.com> (https://github.com/DovydasNavickas)",
+        "Eimantas Dumšė <eimantas@quatrodev.com> (https://github.com/EimantasDumse)"
+    ],
+    "license": "MIT",
+    "devDependencies": {
+        "@types/fetch-mock": "^7.2.3",
+        "@types/jest": "^24.0.11",
+        "@types/node": "^11.11.6",
+        "fetch-mock": "^7.3.1",
+        "istanbul-azure-reporter": "^0.1.4",
+        "jest": "^24.5.0",
+        "jest-junit": "^6.3.0",
+        "simplr-tslint": "^1.0.0-alpha.14",
+        "ts-jest": "^24.0.0",
+        "tslint": "^5.14.0",
+        "tslint-language-service": "^0.9.9",
+        "typescript": "^3.3.4000"
+    },
+    "dependencies": {
+        "query-string": "^6.4.2",
+        "strict-event-emitter-types": "^2.0.0",
+        "tslib": "^1.9.3"
+    },
+    "jest": {
+        "verbose": true,
+        "preset": "ts-jest",
+        "setupFiles": [
+            "./configs/setup-jest.ts"
+        ],
+        "reporters": [
+            "default",
+            "jest-junit"
+        ],
+        "collectCoverage": true,
+        "testRegex": "/__tests__/.*\\.(test|spec).(ts|tsx)$",
+        "collectCoverageFrom": [
+            "src/**/*.{ts,tsx}",
+            "!src/**/__tests__/*",
+            "!src/index.ts"
+        ],
+        "coverageReporters": [
+            "cobertura",
+            "istanbul-azure-reporter"
+        ]
+    }
+}
