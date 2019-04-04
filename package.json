@@ -16,6 +16,10 @@
         "ApiClient",
         "OAuth"
     ],
+    "files": [
+        "dist",
+        "**/*.md"
+    ],
     "author": "ReactWay <dev@reactway.com> (https://github.com/reactway)",
     "contributors": [
         "Martynas Žilinskas <martynas@quatrodev.com> (https://github.com/MartynasZilinskas)",

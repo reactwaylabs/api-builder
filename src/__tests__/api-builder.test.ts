@@ -122,7 +122,7 @@ afterEach(() => {
     fetchMock.restore();
 });
 
-it("Make Get request", async done => {
+it("make Get request", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -139,7 +139,7 @@ it("Make Get request", async done => {
     done();
 });
 
-it("Make Post request", async done => {
+it("make Post request", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -154,7 +154,7 @@ it("Make Post request", async done => {
     done();
 });
 
-it("Make Post request with body of type string", async done => {
+it("make Post request with body of type string", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -170,7 +170,7 @@ it("Make Post request with body of type string", async done => {
     done();
 });
 
-it("Make Post request with body of type object", async done => {
+it("make Post request with body of type object", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -189,7 +189,7 @@ it("Make Post request with body of type object", async done => {
     done();
 });
 
-it("Make Put request", async done => {
+it("make Put request", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -207,7 +207,7 @@ it("Make Put request", async done => {
     done();
 });
 
-it("Make Get request without config path given", async done => {
+it("make Get request without config path given", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST
     });
@@ -221,7 +221,7 @@ it("Make Get request without config path given", async done => {
     done();
 });
 
-it("Make Get request with queue limits", async done => {
+it("make Get request with queue limits", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH,
@@ -244,7 +244,7 @@ it("Make Get request with queue limits", async done => {
     done();
 });
 
-it("Make forced Get request", async done => {
+it("make forced Get request", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -260,7 +260,7 @@ it("Make forced Get request", async done => {
     done();
 });
 
-it("Make Get request with api configuration query params", async done => {
+it("make Get request with api configuration query params", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH,
@@ -279,7 +279,7 @@ it("Make Get request with api configuration query params", async done => {
     done();
 });
 
-it("Make Get request with request query params", async done => {
+it("make Get request with request query params", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -298,7 +298,7 @@ it("Make Get request with request query params", async done => {
     done();
 });
 
-it("Make Post request with Uint8Array body", async done => {
+it("make Post request with Uint8Array body", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -317,7 +317,7 @@ it("Make Post request with Uint8Array body", async done => {
     done();
 });
 
-it("Make Delete request", async done => {
+it("make Delete request", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -335,7 +335,7 @@ it("Make Delete request", async done => {
     done();
 });
 
-it("Make Patch request", async done => {
+it("make Patch request", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH
@@ -353,7 +353,7 @@ it("Make Patch request", async done => {
     done();
 });
 
-it("Authenticated request", async done => {
+it("authenticated request", async done => {
     const identity = new OAuthIdentity({
         host: TEST_HOST,
         loginPath: LOGIN_PATH,
@@ -379,7 +379,7 @@ it("Authenticated request", async done => {
     done();
 });
 
-it("Authenticated request but failed", async done => {
+it("authenticated request but failed", async done => {
     const identity = new OAuthIdentity({
         host: TEST_HOST,
         loginPath: LOGIN_PATH,
@@ -409,7 +409,7 @@ it("Authenticated request but failed", async done => {
     }
 });
 
-it("Authenticated request and then logout", async done => {
+it("authenticated request and then logout", async done => {
     const identity = new OAuthIdentity({
         host: TEST_HOST,
         loginPath: LOGIN_PATH,
@@ -438,7 +438,7 @@ it("Authenticated request and then logout", async done => {
     done();
 });
 
-it("Making authenticated request, when no identity is provided.", async done => {
+it("making authenticated request, when no identity is provided.", async done => {
     const apiBuilder = new ApiBuilder({
         host: API_TEST_HOST,
         path: PATH

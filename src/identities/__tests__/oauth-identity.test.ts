@@ -249,7 +249,7 @@ it("logout failed", async done => {
     }
 });
 
-it("Bad refresh token", async done => {
+it("bad refresh token", async done => {
     const identity = new OAuthIdentity({
         host: TEST_HOST,
         loginPath: LOGIN_PATH,
@@ -266,7 +266,7 @@ it("Bad refresh token", async done => {
     }
 });
 
-it("No Login data is set yet", async done => {
+it("no Login data is set yet", async done => {
     const identity = new OAuthIdentity({
         host: TEST_HOST,
         loginPath: LOGIN_PATH,
