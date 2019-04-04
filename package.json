@@ -31,6 +31,7 @@
         "istanbul-azure-reporter": "^0.1.4",
         "jest": "^24.5.0",
         "jest-junit": "^6.3.0",
+        "node-fetch": "^2.3.0",
         "simplr-tslint": "^1.0.0-alpha.14",
         "ts-jest": "^24.0.0",
         "tslint": "^5.14.0",
@@ -45,9 +46,6 @@
     "jest": {
         "verbose": true,
         "preset": "ts-jest",
-        "setupFiles": [
-            "./configs/setup-jest.ts"
-        ],
         "reporters": [
             "default",
             "jest-junit"
