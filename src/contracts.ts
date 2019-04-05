@@ -87,11 +87,12 @@ export interface OAuthIdentityConfiguration {
     tokenRenewalEnabled?: boolean;
 }
 
-export interface LoginResponseDto {
-    scope?: string;
+export interface OAuthResponseDto {
     token_type: string;
     access_token: string;
-    expires_in: number;
-    refresh_token: string;
+    expires_in?: number;
+    scope?: string;
+    refresh_token?: string;
+    id_token?: string;
 }
 // #endregion

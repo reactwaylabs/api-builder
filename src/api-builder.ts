@@ -57,21 +57,22 @@ export class ApiBuilder {
         const forceRequestIndex = this.requestsQueue.findIndex(x => x.isForced === true);
         const canMakeRequest = this.canMakeRequest();
 
-        // FIXME: Refactor to be more readable (fail fast).
+        if (!canMakeRequest && forceRequestIndex === -1) {
+            return;
+        }
+
         // If there are forced requests waiting in the queue.
         if (forceRequestIndex !== -1) {
             // Perform them first no matter whether we're allowed to make requests.
             // Take force request out of the queue.
             request = this.requestsQueue.splice(forceRequestIndex, 1)[0];
-        } else if (canMakeRequest) {
+        } else {
             // Simply take FIFO request.
             const nextInQueue = this.requestsQueue.shift();
             if (nextInQueue == null) {
                 return;
             }
             request = nextInQueue;
-        } else {
-            return;
         }
 
         // Increment pending requests count.

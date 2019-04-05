@@ -1,5 +1,5 @@
 import { OAuthIdentity } from "../oauth-identity";
-import { LoginResponseDto, HttpMethods } from "../../contracts";
+import { OAuthResponseDto, HttpMethods } from "../../contracts";
 import fetchMock from "fetch-mock";
 jest.useFakeTimers();
 
@@ -7,11 +7,24 @@ const TEST_HOST = "https://example.com";
 const LOGIN_PATH = "/api/login";
 const LOGOUT_PATH = "/api/logout";
 
-const LOGIN_RESPONSE: LoginResponseDto = {
+const LOGIN_RESPONSE: OAuthResponseDto = {
     scope: "offline_access",
     token_type: "Bearer",
     access_token: "ACCESS_TOKEN",
     refresh_token: "REFRESH_TOKEN",
+    // Seconds
+    expires_in: 28800
+};
+const LOGIN_RESPONSE_NO_EXPIRES_IN: OAuthResponseDto = {
+    scope: "offline_access",
+    token_type: "Bearer",
+    access_token: "ACCESS_TOKEN",
+    refresh_token: "REFRESH_TOKEN"
+};
+const LOGIN_RESPONSE_NO_REFRESH_TOKEN: OAuthResponseDto = {
+    scope: "offline_access",
+    token_type: "Bearer",
+    access_token: "ACCESS_TOKEN",
     // Seconds
     expires_in: 28800
 };
@@ -23,6 +36,25 @@ function mockLoginSuccess(): void {
         Promise.resolve({
             status: 200,
             body: JSON.stringify(LOGIN_RESPONSE)
+        })
+    );
+}
+function mockLoginSuccessNoExpiresIn(): void {
+    fetchMock.post(
+        `${TEST_HOST}${LOGIN_PATH}`,
+        Promise.resolve({
+            status: 200,
+            body: JSON.stringify(LOGIN_RESPONSE_NO_EXPIRES_IN)
+        })
+    );
+}
+
+function mockLoginSuccessNoRefreshToken(): void {
+    fetchMock.post(
+        `${TEST_HOST}${LOGIN_PATH}`,
+        Promise.resolve({
+            status: 200,
+            body: JSON.stringify(LOGIN_RESPONSE_NO_REFRESH_TOKEN)
         })
     );
 }
@@ -79,6 +111,38 @@ it("logins successfully", async done => {
     });
 
     mockLoginSuccess();
+    identity.on("login", fn);
+    await identity.login("", "");
+
+    expect(fn).toBeCalled();
+    done();
+});
+
+it("logins successfully with no expires in", async done => {
+    const identity = new OAuthIdentity({
+        host: TEST_HOST,
+        loginPath: LOGIN_PATH,
+        logoutPath: LOGOUT_PATH
+    });
+
+    mockLoginSuccessNoExpiresIn();
+    try {
+        await identity.login("", "");
+        done.fail();
+    } catch {
+        done();
+    }
+});
+
+it("logins successfully with no refresh token", async done => {
+    const fn = jest.fn();
+    const identity = new OAuthIdentity({
+        host: TEST_HOST,
+        loginPath: LOGIN_PATH,
+        logoutPath: LOGOUT_PATH
+    });
+
+    mockLoginSuccessNoRefreshToken();
     identity.on("login", fn);
     await identity.login("", "");
 
@@ -143,7 +207,7 @@ it("logins successfully with time renewal time less than expiration time", async
         host: TEST_HOST,
         loginPath: LOGIN_PATH,
         logoutPath: LOGOUT_PATH,
-        renewTokenTime: LOGIN_RESPONSE.expires_in + 100
+        renewTokenTime: 28900
     });
 
     mockLoginSuccess();
@@ -167,7 +231,7 @@ it("logins successfully and new token", async done => {
     await identity.login("", "");
     expect(fn).toBeCalled();
     jest.runAllTimers();
-    expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), LOGIN_RESPONSE.expires_in - 120);
+    expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 28680);
     done();
 });
 
