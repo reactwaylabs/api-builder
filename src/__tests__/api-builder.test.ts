@@ -1,6 +1,6 @@
 import { ApiBuilder } from "../api-builder";
 import fetchMock from "fetch-mock";
-import { ApiRequestBinaryBody, LoginResponseDto, HttpMethods, ApiRequest } from "../contracts";
+import { ApiRequestBinaryBody,OAuthResponseDto, HttpMethods, ApiRequest } from "../contracts";
 import { OAuthIdentity } from "../identities/oauth-identity";
 jest.useFakeTimers();
 
@@ -16,7 +16,7 @@ const TEST_HOST = "https://example.com";
 const LOGIN_PATH = "/api/login";
 const LOGOUT_PATH = "/api/logout";
 
-const LOGIN_RESPONSE: LoginResponseDto = {
+const LOGIN_RESPONSE: OAuthResponseDto = {
     scope: "offline_access",
     token_type: "Bearer",
     access_token: "ACCESS_TOKEN",
