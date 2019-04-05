@@ -57,6 +57,9 @@
             "default",
             "jest-junit"
         ],
+        "setupFiles": [
+            "./config/jest/local-storage-mock.ts"
+        ],
         "collectCoverage": true,
         "testRegex": "/__tests__/.*\\.(test|spec).(ts|tsx)$",
         "collectCoverageFrom": [

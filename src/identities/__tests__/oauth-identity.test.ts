@@ -100,6 +100,7 @@ function mockLogoutFailed(): void {
 
 afterEach(() => {
     fetchMock.restore();
+    localStorage.clear();
 });
 
 it("logins successfully", async done => {
@@ -347,4 +348,65 @@ it("no Login data is set yet", async done => {
     } catch {
         done();
     }
+});
+// LocalStorage
+it("logins successfully and localStorage filled with data", async done => {
+    const fn = jest.fn();
+    const identity = new OAuthIdentity({
+        host: TEST_HOST,
+        loginPath: LOGIN_PATH,
+        logoutPath: LOGOUT_PATH
+    });
+
+    mockLoginSuccess();
+    identity.on("login", fn);
+    await identity.login("", "");
+
+    expect(fn).toBeCalled();
+    expect(localStorage.getItem("OAuth")).toBe(JSON.stringify(LOGIN_RESPONSE));
+    expect(localStorage.length).toBe(1);
+    done();
+});
+
+fit("logins successfully and disable localStorage filling", async done => {
+    const fn = jest.fn();
+    const identity = new OAuthIdentity({
+        host: TEST_HOST,
+        loginPath: LOGIN_PATH,
+        logoutPath: LOGOUT_PATH
+    });
+
+    mockLoginSuccess();
+    identity.on("login", fn);
+    await identity.login("", "");
+
+    expect(fn).toBeCalled();
+    expect(localStorage.getItem("OAuth")).toBe(null);
+    expect(localStorage.length).toBe(0);
+    done();
+});
+
+it("logout success with cleared saved identity data", async done => {
+    const fn = jest.fn();
+    const identity = new OAuthIdentity({
+        host: TEST_HOST,
+        loginPath: LOGIN_PATH,
+        logoutPath: LOGOUT_PATH
+    });
+
+    mockLoginSuccess();
+    identity.on("login", fn);
+    await identity.login("", "");
+    expect(localStorage.getItem("OAuth")).toBe(JSON.stringify(LOGIN_RESPONSE));
+    expect(localStorage.length).toBe(1);
+    expect(fn).toBeCalled();
+
+    mockLogoutSuccess();
+    identity.on("logout", fn);
+    await identity.logout();
+
+    expect(localStorage.getItem("OAuth")).toBe(null);
+    expect(localStorage.length).toBe(0);
+    expect(fn).toBeCalled();
+    done();
 });
