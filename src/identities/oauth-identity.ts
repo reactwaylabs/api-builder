@@ -8,7 +8,7 @@ import {
     QueuedRequest,
     OAuthIdentityConfiguration,
     HttpMethods,
-    LoginResponseDto
+    OAuthResponseDto
 } from "../contracts";
 
 const IdentityEventEmitter: { new (): StrictEventEmitter<EventEmitter, IdentityMechanismEvents> } = EventEmitter;
@@ -17,7 +17,7 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
         super();
     }
 
-    private loginData: LoginResponseDto | undefined;
+    private loginData: OAuthResponseDto | undefined;
     private renewalTimeoutId: number | undefined;
     /**
      * Value is set in seconds.
@@ -44,7 +44,7 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
         }
 
         this.emit("login");
-        this.setLoginData((await response.json()) as LoginResponseDto);
+        this.setLoginData((await response.json()) as OAuthResponseDto);
     }
 
     public async logout(): Promise<void> {
@@ -111,12 +111,24 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
             throw new Error("Failed renew token.");
         }
 
-        this.setLoginData((await response.json()) as LoginResponseDto);
+        this.setLoginData((await response.json()) as OAuthResponseDto);
     }
 
-    private setLoginData(loginData: LoginResponseDto): void {
+    private setLoginData(loginData: OAuthResponseDto): void {
+        if (loginData.expires_in == null) {
+            throw Error("Not supported without expiration time.");
+        }
+
         this.loginData = loginData;
 
+        // If response do not have `refresh_token` we are not using renewal mechanism.
+        if (loginData.refresh_token == null) {
+            return;
+        }
+
+        const refreshToken = loginData.refresh_token;
+
+        // If response has `refresh_token` but we do not want to use renewal mechanism.
         if (this.configuration.tokenRenewalEnabled === false) {
             return;
         }
@@ -127,7 +139,7 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
         }
 
         const timeoutNumber = this.renewalTime(loginData.expires_in);
-        this.renewalTimeoutId = window.setTimeout(() => this.renewToken(loginData.refresh_token), timeoutNumber);
+        this.renewalTimeoutId = window.setTimeout(() => this.renewToken(refreshToken), timeoutNumber);
     }
 
     private renewalTime(time: number): number {
