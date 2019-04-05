@@ -1,6 +1,6 @@
 import { ApiBuilder } from "../api-builder";
 import fetchMock from "fetch-mock";
-import { ApiRequestBinaryBody,OAuthResponseDto, HttpMethods, ApiRequest } from "../contracts";
+import { ApiRequestBinaryBody, OAuthResponseDto, HttpMethods, ApiRequest } from "../contracts";
 import { OAuthIdentity } from "../identities/oauth-identity";
 jest.useFakeTimers();
 

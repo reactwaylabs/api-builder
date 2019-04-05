@@ -118,7 +118,7 @@ it("logins successfully", async done => {
     done();
 });
 
-it("logins successfully with no expires in", async done => {
+it("logins successfully with no expires_in property", async done => {
     const identity = new OAuthIdentity({
         host: TEST_HOST,
         loginPath: LOGIN_PATH,
