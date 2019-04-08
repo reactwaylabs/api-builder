@@ -10,14 +10,33 @@ import {
     HttpMethods,
     OAuthResponseDto
 } from "../contracts";
+import { STORAGE_OAUTH_KEY } from "../constants";
+import { isOAuthResponse } from "../helpers";
 
 const IdentityEventEmitter: { new (): StrictEventEmitter<EventEmitter, IdentityMechanismEvents> } = EventEmitter;
 export class OAuthIdentity extends IdentityEventEmitter implements IdentityMechanism {
     constructor(protected readonly configuration: OAuthIdentityConfiguration) {
         super();
+
+        if (this.configuration.storage == null) {
+            return;
+        }
+
+        const storageKey = this.configuration.storageKey != null ? this.configuration.storageKey : STORAGE_OAUTH_KEY;
+        const storageOAuthItem = this.configuration.storage.getItem(storageKey);
+
+        if (storageOAuthItem == null) {
+            return;
+        }
+
+        const parsedItem: unknown = JSON.parse(storageOAuthItem);
+
+        if (isOAuthResponse(parsedItem)) {
+            this.oAuth = parsedItem;
+        }
     }
 
-    private loginData: OAuthResponseDto | undefined;
+    private oAuth: OAuthResponseDto | undefined;
     private renewalTimeoutId: number | undefined;
     /**
      * Value is set in seconds.
@@ -44,11 +63,11 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
         }
 
         this.emit("login");
-        this.setLoginData((await response.json()) as OAuthResponseDto);
+        this.setOAuthData((await response.json()) as OAuthResponseDto);
     }
 
     public async logout(): Promise<void> {
-        if (this.loginData == null) {
+        if (this.oAuth == null) {
             throw new Error("Identity: login data is not set yet.");
         }
 
@@ -59,7 +78,7 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
             headers: { ...(this.configuration.headers || {}) },
             body: queryString.stringify({
                 grant_type: "refresh_token",
-                refresh_token: this.loginData.refresh_token
+                refresh_token: this.oAuth.refresh_token
             })
         });
 
@@ -67,13 +86,19 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
         if (responseStatus !== "2") {
             throw new Error("Failed to logout.");
         }
-        this.loginData = undefined;
+        this.oAuth = undefined;
         clearTimeout(this.renewalTimeoutId);
+
         this.emit("logout");
+
+        if (this.configuration.storage == null) {
+            return;
+        }
+        this.configuration.storage.clear();
     }
 
     public async authenticateRequest(request: QueuedRequest): Promise<QueuedRequest> {
-        if (this.loginData == null) {
+        if (this.oAuth == null) {
             throw new Error("Identity: login data is not set yet.");
         }
 
@@ -82,7 +107,7 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
         }
 
         const authHeader: { [index: string]: string } = {
-            Authorization: `${this.loginData.token_type} ${this.loginData.access_token}`
+            Authorization: `${this.oAuth.token_type} ${this.oAuth.access_token}`
         };
 
         request.headers = {
@@ -111,22 +136,27 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
             throw new Error("Failed renew token.");
         }
 
-        this.setLoginData((await response.json()) as OAuthResponseDto);
+        this.setOAuthData((await response.json()) as OAuthResponseDto);
     }
 
-    private setLoginData(loginData: OAuthResponseDto): void {
-        if (loginData.expires_in == null) {
+    private setOAuthData(oAuthData: OAuthResponseDto): void {
+        if (oAuthData.expires_in == null) {
             throw Error("Not supported without expiration time.");
         }
 
-        this.loginData = loginData;
+        this.oAuth = oAuthData;
+
+        if (this.configuration.storage != null) {
+            const storageKey = this.configuration.storageKey != null ? this.configuration.storageKey : STORAGE_OAUTH_KEY;
+            this.configuration.storage.setItem(storageKey, JSON.stringify(oAuthData));
+        }
 
         // If response do not have `refresh_token` we are not using renewal mechanism.
-        if (loginData.refresh_token == null) {
+        if (oAuthData.refresh_token == null) {
             return;
         }
 
-        const refreshToken = loginData.refresh_token;
+        const refreshToken = oAuthData.refresh_token;
 
         // If response has `refresh_token` but we do not want to use renewal mechanism.
         if (this.configuration.tokenRenewalEnabled === false) {
@@ -138,7 +168,7 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
             this.renewalTimeoutId = undefined;
         }
 
-        const timeoutNumber = this.renewalTime(loginData.expires_in);
+        const timeoutNumber = this.renewalTime(oAuthData.expires_in);
         this.renewalTimeoutId = window.setTimeout(() => this.renewToken(refreshToken), timeoutNumber);
     }
 

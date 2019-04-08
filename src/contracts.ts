@@ -85,6 +85,8 @@ export interface OAuthIdentityConfiguration {
     headers?: { [index: string]: string };
     renewTokenTime?: number | ((time: number) => number);
     tokenRenewalEnabled?: boolean;
+    storageKey?: string;
+    storage?: Storage;
 }
 
 export interface OAuthResponseDto {
