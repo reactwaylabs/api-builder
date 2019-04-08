@@ -10,25 +10,25 @@ import {
     HttpMethods,
     OAuthResponseDto
 } from "../contracts";
-import { LOCAL_STORAGE_OAUTH_KEY } from "../constants";
+import { STORAGE_OAUTH_KEY } from "../constants";
 
 const IdentityEventEmitter: { new (): StrictEventEmitter<EventEmitter, IdentityMechanismEvents> } = EventEmitter;
 export class OAuthIdentity extends IdentityEventEmitter implements IdentityMechanism {
     constructor(protected readonly configuration: OAuthIdentityConfiguration) {
         super();
 
-        if (this.configuration.localStorageSaveEnable === false) {
+        if (this.configuration.storage == null) {
             return;
         }
 
-        const localStorageKey = this.configuration.localStorageKey != null ? this.configuration.localStorageKey : LOCAL_STORAGE_OAUTH_KEY;
-        const localStorageOAuthItem = localStorage.getItem(localStorageKey);
+        const storageKey = this.configuration.storageKey != null ? this.configuration.storageKey : STORAGE_OAUTH_KEY;
+        const storageOAuthItem = this.configuration.storage.getItem(storageKey);
 
-        if (localStorageOAuthItem == null) {
+        if (storageOAuthItem == null) {
             return;
         }
 
-        this.oAuth = JSON.parse(localStorageOAuthItem) as OAuthResponseDto;
+        this.oAuth = JSON.parse(storageOAuthItem) as OAuthResponseDto;
     }
 
     private oAuth: OAuthResponseDto | undefined;
@@ -86,10 +86,10 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
 
         this.emit("logout");
 
-        if (this.configuration.localStorageSaveEnable === false) {
+        if (this.configuration.storage == null) {
             return;
         }
-        localStorage.clear();
+        this.configuration.storage.clear();
     }
 
     public async authenticateRequest(request: QueuedRequest): Promise<QueuedRequest> {
@@ -141,10 +141,9 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
 
         this.oAuth = oAuthData;
 
-        if (this.configuration.localStorageSaveEnable === true || this.configuration.localStorageSaveEnable == null) {
-            const localStorageKey =
-                this.configuration.localStorageKey != null ? this.configuration.localStorageKey : LOCAL_STORAGE_OAUTH_KEY;
-            localStorage.setItem(localStorageKey, JSON.stringify(oAuthData));
+        if (this.configuration.storage != null) {
+            const storageKey = this.configuration.storageKey != null ? this.configuration.storageKey : STORAGE_OAUTH_KEY;
+            this.configuration.storage.setItem(storageKey, JSON.stringify(oAuthData));
         }
 
         // If response do not have `refresh_token` we are not using renewal mechanism.
