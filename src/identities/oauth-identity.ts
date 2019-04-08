@@ -16,6 +16,19 @@ const IdentityEventEmitter: { new (): StrictEventEmitter<EventEmitter, IdentityM
 export class OAuthIdentity extends IdentityEventEmitter implements IdentityMechanism {
     constructor(protected readonly configuration: OAuthIdentityConfiguration) {
         super();
+
+        if (this.configuration.localStorageSaveEnable === false) {
+            return;
+        }
+
+        const localStorageKey = this.configuration.localStorageKey != null ? this.configuration.localStorageKey : LOCAL_STORAGE_OAUTH_KEY;
+        const localStorageOAuthItem = localStorage.getItem(localStorageKey);
+
+        if (localStorageOAuthItem == null) {
+            return;
+        }
+
+        this.oAuth = JSON.parse(localStorageOAuthItem) as OAuthResponseDto;
     }
 
     private oAuth: OAuthResponseDto | undefined;

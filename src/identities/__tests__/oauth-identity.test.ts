@@ -368,12 +368,13 @@ it("logins successfully and localStorage filled with data", async done => {
     done();
 });
 
-fit("logins successfully and disable localStorage filling", async done => {
+it("logins, logouts successfully and disable localStorage filling", async done => {
     const fn = jest.fn();
     const identity = new OAuthIdentity({
         host: TEST_HOST,
         loginPath: LOGIN_PATH,
-        logoutPath: LOGOUT_PATH
+        logoutPath: LOGOUT_PATH,
+        localStorageSaveEnable: false
     });
 
     mockLoginSuccess();
@@ -383,6 +384,14 @@ fit("logins successfully and disable localStorage filling", async done => {
     expect(fn).toBeCalled();
     expect(localStorage.getItem("OAuth")).toBe(null);
     expect(localStorage.length).toBe(0);
+
+    mockLogoutSuccess();
+    identity.on("logout", fn);
+    await identity.logout();
+
+    expect(localStorage.getItem("OAuth")).toBe(null);
+    expect(localStorage.length).toBe(0);
+    expect(fn).toBeCalled();
     done();
 });
 
@@ -409,4 +418,35 @@ it("logout success with cleared saved identity data", async done => {
     expect(localStorage.length).toBe(0);
     expect(fn).toBeCalled();
     done();
+});
+
+it("logins successfully and localStorage filling with custom key", async done => {
+    const fn = jest.fn();
+    const identity = new OAuthIdentity({
+        host: TEST_HOST,
+        loginPath: LOGIN_PATH,
+        logoutPath: LOGOUT_PATH,
+        localStorageKey: "token"
+    });
+
+    mockLoginSuccess();
+    identity.on("login", fn);
+    await identity.login("", "");
+
+    expect(fn).toBeCalled();
+    expect(localStorage.getItem("token")).toBe(JSON.stringify(LOGIN_RESPONSE));
+    expect(localStorage.length).toBe(1);
+    done();
+});
+
+it("local storage data fills OAuthIdentity mechanism", () => {
+    localStorage.setItem("OAuth", JSON.stringify(LOGIN_RESPONSE));
+
+    const identity = new OAuthIdentity({
+        host: TEST_HOST,
+        loginPath: LOGIN_PATH,
+        logoutPath: LOGOUT_PATH
+    });
+
+    expect(identity["oAuth"]).toEqual(LOGIN_RESPONSE);
 });
