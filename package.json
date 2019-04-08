@@ -1,6 +1,6 @@
 {
     "name": "@reactway/api-builder",
-    "version": "1.0.0-alpha.2",
+    "version": "1.0.0-alpha.3",
     "description": "An easy api client builder for applications with identity.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
