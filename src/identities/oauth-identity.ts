@@ -11,6 +11,7 @@ import {
     OAuthResponseDto
 } from "../contracts";
 import { STORAGE_OAUTH_KEY } from "../constants";
+import { isOAuthResponse } from "../helpers";
 
 const IdentityEventEmitter: { new (): StrictEventEmitter<EventEmitter, IdentityMechanismEvents> } = EventEmitter;
 export class OAuthIdentity extends IdentityEventEmitter implements IdentityMechanism {
@@ -28,7 +29,11 @@ export class OAuthIdentity extends IdentityEventEmitter implements IdentityMecha
             return;
         }
 
-        this.oAuth = JSON.parse(storageOAuthItem) as OAuthResponseDto;
+        const parsedItem: unknown = JSON.parse(storageOAuthItem);
+
+        if (isOAuthResponse(parsedItem)) {
+            this.oAuth = parsedItem;
+        }
     }
 
     private oAuth: OAuthResponseDto | undefined;
