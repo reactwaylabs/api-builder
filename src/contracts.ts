@@ -29,7 +29,7 @@ export interface ApiConfiguration {
     requestQueueLimit?: number;
 }
 
-export type QueryParams = { [key: string]: string | number | Array<string | number> };
+export type QueryParams = { [key: string]: string | number | Array<string | number> | null | undefined };
 
 export enum HttpMethods {
     GET = "GET",
