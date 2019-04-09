@@ -128,7 +128,7 @@ export class ApiBuilder {
         this.makeRequest();
     }
 
-    public async get(requestDto: BaseApiRequest<never>): Promise<Response> {
+    protected async get(requestDto: BaseApiRequest<never>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             this.requestsQueue.push({
                 ...requestDto,
@@ -139,7 +139,7 @@ export class ApiBuilder {
         });
     }
 
-    public async post<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
+    protected async post<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             this.requestsQueue.push({
                 ...requestDto,
@@ -150,7 +150,7 @@ export class ApiBuilder {
         });
     }
 
-    public async put<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
+    protected async put<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             this.requestsQueue.push({
                 ...requestDto,
@@ -161,7 +161,7 @@ export class ApiBuilder {
         });
     }
 
-    public async patch<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
+    protected async patch<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             this.requestsQueue.push({
                 ...requestDto,
@@ -172,7 +172,7 @@ export class ApiBuilder {
         });
     }
 
-    public async delete<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
+    protected async delete<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             this.requestsQueue.push({
                 ...requestDto,

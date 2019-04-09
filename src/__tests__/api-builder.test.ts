@@ -1,8 +1,18 @@
 import { ApiBuilder } from "../api-builder";
 import fetchMock from "fetch-mock";
-import { ApiRequestBinaryBody, OAuthResponseDto, HttpMethods, ApiRequest } from "../contracts";
+import { ApiRequestBinaryBody, OAuthResponseDto, HttpMethods, ApiRequest, BaseApiRequest, QueryParams } from "../contracts";
 import { OAuthIdentity } from "../identities/oauth-identity";
 jest.useFakeTimers();
+
+interface ApiTestClient {
+    get: (requestDto: BaseApiRequest<never>) => Promise<Response>;
+    post: <TBody = {}>(requestDto: BaseApiRequest<TBody>) => Promise<Response>;
+    put: <TBody = {}>(requestDto: BaseApiRequest<TBody>) => Promise<Response>;
+    patch: <TBody = {}>(requestDto: BaseApiRequest<TBody>) => Promise<Response>;
+    delete: <TBody = {}>(requestDto: BaseApiRequest<TBody>) => Promise<Response>;
+
+    getItem: () => Promise<Response>;
+}
 
 const API_TEST_HOST = "https://example.com";
 const PATH = "/api";
@@ -24,6 +34,38 @@ const LOGIN_RESPONSE: OAuthResponseDto = {
     // Seconds
     expires_in: 28800
 };
+
+class ApiClient extends ApiBuilder {
+    constructor(identity?: OAuthIdentity, queryParams?: QueryParams, queueLimit?: number, usePath?: boolean) {
+        super({
+            host: API_TEST_HOST,
+            path: usePath === false ? undefined : PATH,
+            identity: identity,
+            defaultQueryParams: queryParams,
+            requestQueueLimit: queueLimit
+        });
+    }
+
+    public async getItem(): Promise<Response> {
+        const request: ApiRequest = {
+            requestPath: PATH_GET,
+            method: HttpMethods.GET
+        };
+        return this.get(request);
+    }
+}
+
+// FIXME: Temporary solution.
+// tslint:disable-next-line:no-any
+const ApiTestClient: { new (): ApiTestClient } = ApiClient as any;
+// FIXME: Temporary solution.
+// tslint:disable-next-line:no-any
+const ApiTestClientIdentity: { new (identity: OAuthIdentity): ApiTestClient } = ApiClient as any;
+const ApiTestClientQueryParams: { new (identity: undefined, queryParams: QueryParams): ApiTestClient } = ApiClient as any;
+const ApiTestClientQueueLimits: { new (identity: undefined, queryParams: undefined, queueLimit: number): ApiTestClient } = ApiClient as any;
+const ApiTestClientNoPath: {
+    new (identity: undefined, queryParams: undefined, queueLimit: undefined, usePath: boolean): ApiTestClient;
+} = ApiClient as any;
 
 // #region Mocked fetch results.
 function mockLoginSuccess(): void {
@@ -123,27 +165,17 @@ afterEach(() => {
 });
 
 it("make Get request", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiClient = new ApiTestClient();
 
     mockGetSuccess();
-    const request: ApiRequest = {
-        requestPath: PATH_GET,
-        method: HttpMethods.GET
-    };
-    const getExample = await apiBuilder.get(request);
 
+    const getExample = await apiClient.getItem();
     expect(getExample.status).toEqual(200);
     done();
 });
 
 it("make Post request", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockPostSuccess();
     const getExample = await apiBuilder.post({
@@ -155,10 +187,7 @@ it("make Post request", async done => {
 });
 
 it("make Post request with body of type string", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockPostSuccess();
     const getExample = await apiBuilder.post({
@@ -171,10 +200,7 @@ it("make Post request with body of type string", async done => {
 });
 
 it("make Post request with body of type object", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockPostSuccess();
     const getExample = await apiBuilder.post<{ name: string; surname: string }>({
@@ -190,10 +216,7 @@ it("make Post request with body of type object", async done => {
 });
 
 it("make Put request", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockPutSuccess();
     const getExample = await apiBuilder.put<{ name: string }>({
@@ -208,9 +231,7 @@ it("make Put request", async done => {
 });
 
 it("make Get request without config path given", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST
-    });
+    const apiBuilder = new ApiTestClientNoPath(undefined, undefined, undefined, false);
 
     mockGetPathSuccess();
     const getExample = await apiBuilder.get({
@@ -222,11 +243,7 @@ it("make Get request without config path given", async done => {
 });
 
 it("make Get request with queue limits", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH,
-        requestQueueLimit: 1
-    });
+    const apiBuilder = new ApiTestClientQueueLimits(undefined, undefined, 1);
 
     mockGetSuccess();
     const getExampleOne = apiBuilder.get({
@@ -245,10 +262,7 @@ it("make Get request with queue limits", async done => {
 });
 
 it("make forced Get request", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockGetSuccess();
     const getExample = await apiBuilder.get({
@@ -261,13 +275,10 @@ it("make forced Get request", async done => {
 });
 
 it("make Get request with api configuration query params", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH,
-        defaultQueryParams: {
-            page: 2
-        }
-    });
+    const queryParams: QueryParams = {
+        page: 2
+    };
+    const apiBuilder = new ApiTestClientQueryParams(undefined, queryParams);
 
     mockGetQueryParamsPathSuccess();
     const getExample = await apiBuilder.get({
@@ -280,10 +291,7 @@ it("make Get request with api configuration query params", async done => {
 });
 
 it("make Get request with request query params", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockGetQueryParamsPathSuccess();
     const getExample = await apiBuilder.get({
@@ -299,10 +307,7 @@ it("make Get request with request query params", async done => {
 });
 
 it("make Post request with Uint8Array body", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockPostSuccess();
     const getExample = await apiBuilder.post<ApiRequestBinaryBody>({
@@ -318,10 +323,7 @@ it("make Post request with Uint8Array body", async done => {
 });
 
 it("make Delete request", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockDeleteSuccess();
     const getExample = await apiBuilder.delete<{ id: number }>({
@@ -336,10 +338,7 @@ it("make Delete request", async done => {
 });
 
 it("make Patch request", async done => {
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH
-    });
+    const apiBuilder = new ApiTestClient();
 
     mockPatchSuccess();
     const getExample = await apiBuilder.patch<{ id: number }>({
@@ -363,11 +362,7 @@ it("authenticated request", async done => {
     mockLoginSuccess();
     await identity.login("", "");
 
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH,
-        identity: identity
-    });
+    const apiBuilder = new ApiTestClientIdentity(identity);
 
     mockGetSuccess();
     const getExample = await apiBuilder.get({
@@ -389,11 +384,7 @@ it("authenticated request but failed", async done => {
     mockLoginSuccess();
     await identity.login("", "");
 
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH,
-        identity: identity
-    });
+    const apiBuilder = new ApiTestClientIdentity(identity);
 
     mockGetAuthFailed();
     mockLogoutSuccess();
@@ -419,11 +410,7 @@ it("authenticated request and then logout", async done => {
     mockLoginSuccess();
     await identity.login("", "");
 
-    const apiBuilder = new ApiBuilder({
-        host: API_TEST_HOST,
-        path: PATH,
-        identity: identity
-    });
+    const apiBuilder = new ApiTestClientIdentity(identity);
 
     mockGetSuccess();
     const getExample = await apiBuilder.get({
