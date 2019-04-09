@@ -36,12 +36,13 @@ const LOGIN_RESPONSE: OAuthResponseDto = {
 };
 
 class ApiClient extends ApiBuilder {
-    constructor(identity?: OAuthIdentity, queryParams?: QueryParams) {
+    constructor(identity?: OAuthIdentity, queryParams?: QueryParams, queueLimit?: number, usePath?: boolean) {
         super({
             host: API_TEST_HOST,
-            path: PATH,
+            path: usePath === false ? undefined : PATH,
             identity: identity,
-            defaultQueryParams: queryParams
+            defaultQueryParams: queryParams,
+            requestQueueLimit: queueLimit
         });
     }
 
@@ -60,6 +61,11 @@ const ApiTestClient: { new (): ApiTestClient } = ApiClient as any;
 // FIXME: Temporary solution.
 // tslint:disable-next-line:no-any
 const ApiTestClientIdentity: { new (identity: OAuthIdentity): ApiTestClient } = ApiClient as any;
+const ApiTestClientQueryParams: { new (identity: undefined, queryParams: QueryParams): ApiTestClient } = ApiClient as any;
+const ApiTestClientQueueLimits: { new (identity: undefined, queryParams: undefined, queueLimit: number): ApiTestClient } = ApiClient as any;
+const ApiTestClientNoPath: {
+    new (identity: undefined, queryParams: undefined, queueLimit: undefined, usePath: boolean): ApiTestClient;
+} = ApiClient as any;
 
 // #region Mocked fetch results.
 function mockLoginSuccess(): void {
@@ -99,14 +105,14 @@ function mockGetAuthFailed(): void {
     );
 }
 
-// function mockGetPathSuccess(): void {
-//     fetchMock.get(
-//         `${API_TEST_HOST}${PATH_GET}`,
-//         Promise.resolve({
-//             status: 200
-//         })
-//     );
-// }
+function mockGetPathSuccess(): void {
+    fetchMock.get(
+        `${API_TEST_HOST}${PATH_GET}`,
+        Promise.resolve({
+            status: 200
+        })
+    );
+}
 
 function mockGetQueryParamsPathSuccess(): void {
     fetchMock.get(
@@ -224,42 +230,36 @@ it("make Put request", async done => {
     done();
 });
 
-// it("make Get request without config path given", async done => {
-//     const apiBuilder = new ApiBuilder({
-//         host: API_TEST_HOST
-//     });
+it("make Get request without config path given", async done => {
+    const apiBuilder = new ApiTestClientNoPath(undefined, undefined, undefined, false);
 
-//     mockGetPathSuccess();
-//     const getExample = await apiBuilder.get({
-//         requestPath: PATH_GET
-//     });
+    mockGetPathSuccess();
+    const getExample = await apiBuilder.get({
+        requestPath: PATH_GET
+    });
 
-//     expect(getExample.status).toEqual(200);
-//     done();
-// });
+    expect(getExample.status).toEqual(200);
+    done();
+});
 
-// it("make Get request with queue limits", async done => {
-//     const apiBuilder = new ApiBuilder({
-//         host: API_TEST_HOST,
-//         path: PATH,
-//         requestQueueLimit: 1
-//     });
+it("make Get request with queue limits", async done => {
+    const apiBuilder = new ApiTestClientQueueLimits(undefined, undefined, 1);
 
-//     mockGetSuccess();
-//     const getExampleOne = apiBuilder.get({
-//         requestPath: PATH_GET
-//     });
-//     const getExampleTwo = apiBuilder.get({
-//         requestPath: PATH_GET
-//     });
+    mockGetSuccess();
+    const getExampleOne = apiBuilder.get({
+        requestPath: PATH_GET
+    });
+    const getExampleTwo = apiBuilder.get({
+        requestPath: PATH_GET
+    });
 
-//     const exampleOneResponse = await getExampleOne;
-//     const exampleTwoResponse = await getExampleTwo;
+    const exampleOneResponse = await getExampleOne;
+    const exampleTwoResponse = await getExampleTwo;
 
-//     expect(exampleOneResponse.status).toEqual(200);
-//     expect(exampleTwoResponse.status).toEqual(200);
-//     done();
-// });
+    expect(exampleOneResponse.status).toEqual(200);
+    expect(exampleTwoResponse.status).toEqual(200);
+    done();
+});
 
 it("make forced Get request", async done => {
     const apiBuilder = new ApiTestClient();
@@ -274,21 +274,21 @@ it("make forced Get request", async done => {
     done();
 });
 
-// it("make Get request with api configuration query params", async done => {
-//     const queryParams: QueryParams = {
-//         page: 2
-//     };
-//     const apiBuilder = new ApiTestClientQueryParams(queryParams);
+it("make Get request with api configuration query params", async done => {
+    const queryParams: QueryParams = {
+        page: 2
+    };
+    const apiBuilder = new ApiTestClientQueryParams(undefined, queryParams);
 
-//     mockGetQueryParamsPathSuccess();
-//     const getExample = await apiBuilder.get({
-//         requestPath: PATH_GET,
-//         isForced: true
-//     });
+    mockGetQueryParamsPathSuccess();
+    const getExample = await apiBuilder.get({
+        requestPath: PATH_GET,
+        isForced: true
+    });
 
-//     expect(getExample.status).toEqual(200);
-//     done();
-// });
+    expect(getExample.status).toEqual(200);
+    done();
+});
 
 it("make Get request with request query params", async done => {
     const apiBuilder = new ApiTestClient();
