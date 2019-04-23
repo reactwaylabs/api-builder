@@ -2,6 +2,7 @@ import { ApiBuilder } from "../api-builder";
 import fetchMock from "fetch-mock";
 import { ApiRequestBinaryBody, OAuthResponseDto, HttpMethods, ApiRequest, BaseApiRequest, QueryParams } from "../contracts";
 import { OAuthIdentity } from "../identities/oauth-identity";
+import { REQUEST_STARTED, REQUEST_ENDED } from "../constants";
 jest.useFakeTimers();
 
 interface ApiTestClient {
@@ -45,7 +46,6 @@ class ApiClient extends ApiBuilder {
             requestQueueLimit: queueLimit
         });
     }
-
     public async getItem(): Promise<Response> {
         const request: ApiRequest = {
             requestPath: PATH_GET,
@@ -171,6 +171,34 @@ it("make Get request", async done => {
 
     const getExample = await apiClient.getItem();
     expect(getExample.status).toEqual(200);
+    done();
+});
+
+it("make Get request and get event on request started", async done => {
+    const fn = jest.fn();
+    const apiClient = new ApiTestClient();
+
+    mockGetSuccess();
+    ApiBuilder.requestEventEmitter.on(REQUEST_STARTED, fn);
+    const getExample = await apiClient.getItem();
+
+    expect(getExample.status).toEqual(200);
+    expect(fn).toBeCalled();
+
+    done();
+});
+
+it("make Get request and get event on request ended", async done => {
+    const fn = jest.fn();
+    const apiClient = new ApiTestClient();
+
+    mockGetSuccess();
+    ApiBuilder.requestEventEmitter.on(REQUEST_ENDED, fn);
+    const getExample = await apiClient.getItem();
+
+    expect(getExample.status).toEqual(200);
+    expect(fn).toBeCalled();
+
     done();
 });
 
@@ -434,7 +462,7 @@ it("making authenticated request, when no identity is provided.", async done => 
     mockGetSuccess();
 
     new Promise<Response>((resolve, reject) => {
-        apiBuilder["requestsQueue"].push({
+        ApiBuilder["requestsQueue"].push({
             requestPath: PATH_GET,
             isAuthenticated: true,
             method: HttpMethods.GET,

@@ -1,7 +1,8 @@
 import queryString from "query-string";
 import { QueuedRequest, ApiConfiguration, ApiRequest, HttpMethods, BaseApiRequest } from "./contracts";
-import { REQUEST_QUEUE_LIMIT } from "./constants";
+import { REQUEST_QUEUE_LIMIT, REQUEST_ENDED, REQUEST_STARTED } from "./constants";
 import { isBinaryBody } from "./helpers";
+import { EventEmitter } from "events";
 
 export class ApiBuilder {
     constructor(protected readonly configuration: ApiConfiguration) {
@@ -10,7 +11,8 @@ export class ApiBuilder {
         }
     }
 
-    private requestsQueue: QueuedRequest[] = [];
+    public static requestEventEmitter: EventEmitter = new EventEmitter();
+    private static requestsQueue: QueuedRequest[] = [];
     private pendingRequests: number = 0;
 
     protected canMakeRequest(): boolean {
@@ -19,7 +21,7 @@ export class ApiBuilder {
     }
 
     protected clearQueue(): void {
-        this.requestsQueue = [];
+        ApiBuilder.requestsQueue = [];
     }
 
     protected onIdentityLogout(): void {
@@ -54,7 +56,7 @@ export class ApiBuilder {
     protected async makeRequest(): Promise<void> {
         let request: QueuedRequest;
 
-        const forceRequestIndex = this.requestsQueue.findIndex(x => x.isForced === true);
+        const forceRequestIndex = ApiBuilder.requestsQueue.findIndex(x => x.isForced === true);
         const canMakeRequest = this.canMakeRequest();
 
         if (!canMakeRequest && forceRequestIndex === -1) {
@@ -65,11 +67,12 @@ export class ApiBuilder {
         if (forceRequestIndex !== -1) {
             // Perform them first no matter whether we're allowed to make requests.
             // Take force request out of the queue.
-            request = this.requestsQueue.splice(forceRequestIndex, 1)[0];
+            request = ApiBuilder.requestsQueue.splice(forceRequestIndex, 1)[0];
         } else {
             // Simply take FIFO request.
-            const nextInQueue = this.requestsQueue.shift();
+            const nextInQueue = ApiBuilder.requestsQueue.shift();
             if (nextInQueue == null) {
+                ApiBuilder.requestEventEmitter.emit(REQUEST_ENDED);
                 return;
             }
             request = nextInQueue;
@@ -130,7 +133,10 @@ export class ApiBuilder {
 
     protected async get(requestDto: BaseApiRequest<never>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            this.requestsQueue.push({
+            if (this.pendingRequests === 0) {
+                ApiBuilder.requestEventEmitter.emit(REQUEST_STARTED);
+            }
+            ApiBuilder.requestsQueue.push({
                 ...requestDto,
                 method: HttpMethods.GET,
                 deferred: { resolve, reject }
@@ -141,7 +147,7 @@ export class ApiBuilder {
 
     protected async post<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            this.requestsQueue.push({
+            ApiBuilder.requestsQueue.push({
                 ...requestDto,
                 method: HttpMethods.POST,
                 deferred: { resolve, reject }
@@ -152,7 +158,7 @@ export class ApiBuilder {
 
     protected async put<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            this.requestsQueue.push({
+            ApiBuilder.requestsQueue.push({
                 ...requestDto,
                 method: HttpMethods.PUT,
                 deferred: { resolve, reject }
@@ -163,7 +169,7 @@ export class ApiBuilder {
 
     protected async patch<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            this.requestsQueue.push({
+            ApiBuilder.requestsQueue.push({
                 ...requestDto,
                 method: HttpMethods.PATCH,
                 deferred: { resolve, reject }
@@ -174,7 +180,7 @@ export class ApiBuilder {
 
     protected async delete<TBody = {}>(requestDto: BaseApiRequest<TBody>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            this.requestsQueue.push({
+            ApiBuilder.requestsQueue.push({
                 ...requestDto,
                 method: HttpMethods.DELETE,
                 deferred: { resolve, reject }
