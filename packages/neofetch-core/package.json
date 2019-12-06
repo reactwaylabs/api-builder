@@ -1,0 +1,50 @@
+{
+    "name": "neofetch-core",
+    "version": "1.0.0-alpha",
+    "description": "A framework for building REST driven applications.",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc -p .",
+        "watch": "tsc -p . -w",
+        "test": "tsc -p . --noEmit && eslint \"src/**/*.ts*\" -f visualstudio"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/reactway/api-builder.git"
+    },
+    "keywords": [
+        "fetch",
+        "api",
+        "client",
+        "api-builder",
+        "framework",
+        "neofetch"
+    ],
+    "files": [
+        "dist",
+        "docs",
+        "*.js",
+        "*.d.ts",
+        "!*.config.js",
+        "!dist/_debug*"
+    ],
+    "author": "Reactway <dev@reactway.com> (https://github.com/reactway)",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/reactway/api-builder/issues"
+    },
+    "homepage": "https://github.com/reactway/api-builder#readme",
+    "devDependencies": {
+        "@reactway/eslint-config": "^1.0.0-alpha.5",
+        "@types/node": "^12.12.14",
+        "eslint": "^6.7.2",
+        "typescript": "^3.7.3"
+    },
+    "dependencies": {
+        "events": "^3.0.0",
+        "query-string": "^6.4.2",
+        "strict-event-emitter-types": "^2.0.0",
+        "tslib": "^1.9.3"
+    }
+}

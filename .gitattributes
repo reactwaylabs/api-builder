@@ -1,0 +1,4 @@
+# Don't allow people to merge changes to these generated files, because the result may be invalid.
+package-lock.json            merge=binary linguist-generated=true
+yarn.lock                    merge=binary linguist-generated=true
+**/__snapshots__/*           linguist-generated=true
